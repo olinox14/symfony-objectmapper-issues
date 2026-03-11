@@ -1,68 +1,60 @@
-# DTO Demo
+# Symfony ObjectMapper Issues Reproduction
 
 ## Overview
 
-Structure simple pour la gestion de données via des DTOs, avec Symfony et API Platform.
+This is a minimal reproduction application designed to demonstrate and reproduce issues encountered with the Symfony **ObjectMapper** service.
 
-- **Backend:** Symfony 7 & API Platform 4
-- **Infrastructure:** Fully dockerized environment with Caddy as a reverse proxy for seamless local development.
+- **Backend:** Symfony 8.0 & API Platform 4.2
+- **Infrastructure:** Fully dockerized environment with Caddy as a reverse proxy.
 
-## Fonctionnement de l'API Demo
+### Symfony 8.1 Backport
 
-L'accès des données dans cet exemple se fait autour d'une ressource centrale `StoreDTO`, elle-même liée à 
-plusieurs autres ressources.
+Although the project uses Symfony 8.0 (to maintain compatibility with API Platform 4), it includes custom classes 
+located in `api/src/ObjectMapper`. These classes are a temporary backport of features planned for **Symfony 8.1** 
+(specifically the `ReverseClassObjectMapperMetadataFactory`), simulating the behavior of the next major Symfony version's ObjectMapper.
 
-### Opérations de lecture (GET)
+## API Demo Logic
 
-Lors d'un GET sur `StoreDTO` :
+The data access in this example revolves around a central `Store` resource, linked to several other resources.
 
-- Les ressources liées (`manager`, `toys`, `categories`) sont retournées directement sous forme d'objets imbriqués (**embedded**).
-- L'identifiant auto-généré par API Platform (`@id`) est volontairement omis dans les objets imbriqués pour simplifier la structure.
+### Read Operations (GET)
 
-### Opérations d'écriture (POST, PUT, PATCH)
-
-Le traitement des ressources imbriquées suit une logique de création/mise à jour "intelligente" :
-
-- **Mise à jour** : Si un `id` est présent dans l'objet imbriqué, l'entité correspondante est récupérée en base et mise à jour avec les nouvelles données.
-- **Création** : Si aucun `id` n'est fourni, une nouvelle entité est créée et associée à la ressource principale.
+When performing a GET on a Store:
+- Linked resources (`manager`, `toys`, `categories`) are returned directly as **embedded** objects.
+- The auto-generated API Platform identifier (`@id`) is intentionally omitted in embedded objects to simplify the structure.
 
 
-## Install
+## Installation
 
 Add this line to your hosts file:
 
     127.0.0.1 local.api.objectmapper.net
 
-Copy the .env files, and edit it if needed:
+Copy the .env files and edit them :
 
     cp .env.skeleton .env
     cp api/.env.skeleton api/.env
 
-Change the DB root password in :
-
-* api/.env
-* .env
+Change the DB root password in:
+- `api/.env`
+- `.env`
 
 Run from the project directory:
 
     docker-compose build
-    docker-compose up
+    docker-compose up -d
 
-Install dependencies : 
+Install dependencies:
 
-    docker exec -it objectmapper_api bash
-    composer install
+    docker exec -it objectmapper_api composer install
 
-Create the database and populate it :
+Create the database and populate it:
 
-    bin/console doctrine:database:create
-    bin/console doctrine:schema:create
-    bin/console doctrine:schema:update --force
-    bin/console foundry:load-fixtures app:seed --no-interaction
-    exit
+    docker exec -it objectmapper_api bin/console doctrine:database:create
+    docker exec -it objectmapper_api bin/console doctrine:schema:create
+    docker exec -it objectmapper_api bin/console foundry:load-fixtures app:seed --no-interaction
 
-
-## Run
+## Usage
 
 Run from the project directory:
 
@@ -76,12 +68,12 @@ To populate the database with representative sample data (this will purge the da
 
 ## Tests
 
-Populate the test database :
+Populate the test database:
 
     docker exec -it objectmapper_api bin/console doctrine:database:create --env=test
     docker exec -it objectmapper_api bin/console doctrine:schema:create --env=test
     docker exec -it objectmapper_api bin/console foundry:load-fixtures app:seed --no-interaction --env=test
 
-Execute the tests :
+Execute the tests:
 
     docker exec -it objectmapper_api ./vendor/bin/phpunit -c phpunit.xml.dist

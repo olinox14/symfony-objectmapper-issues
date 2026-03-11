@@ -1,1 +1,0 @@
-# symfony-objectmapper-issues
