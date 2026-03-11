@@ -4,10 +4,7 @@ declare(strict_types=1);
 
 namespace App\Api\Dto\Store;
 
-use App\Api\Resource\Manager\Manager as ManagerResource;
-use App\Api\Resource\Store\Toy;
 use App\Entity\Store as StoreEntity;
-use App\Entity\Manager as ManagerEntity;
 use App\ObjectMapper\Transform\IriToEntityTransformer;
 use Symfony\Component\ObjectMapper\Attribute\Map;
 use Symfony\Component\Validator\Constraints as Assert;

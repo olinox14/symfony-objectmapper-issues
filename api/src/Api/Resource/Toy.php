@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Api\Resource\Store;
+namespace App\Api\Resource;
 
 use ApiPlatform\Doctrine\Orm\State\Options;
 use ApiPlatform\Metadata\ApiProperty;

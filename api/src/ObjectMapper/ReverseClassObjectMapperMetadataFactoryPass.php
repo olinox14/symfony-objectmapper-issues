@@ -27,7 +27,7 @@ final class ReverseClassObjectMapperMetadataFactoryPass implements CompilerPassI
 
         // Scan Embedded classes for #[Map(source: ...)] → classMap
         $embeddedDir = \dirname(__DIR__).'/Api/Embedded';
-        foreach (glob($embeddedDir.'/**/*.php') as $file) {
+        foreach (glob($embeddedDir.'/*/*.php') as $file) {
             $subDir = basename(\dirname($file));
             $class = 'App\\Api\\Embedded\\'.$subDir.'\\'.pathinfo($file, \PATHINFO_FILENAME);
 
@@ -46,9 +46,9 @@ final class ReverseClassObjectMapperMetadataFactoryPass implements CompilerPassI
 
         // Scan Resource classes to find entity Collection properties that map to resource array properties
         $resourceDir = \dirname(__DIR__).'/Api/Resource';
-        foreach (glob($resourceDir.'/**/*.php') as $file) {
-            $subDir = basename(\dirname($file));
-            $class = 'App\\Api\\Resource\\'.$subDir.'\\'.pathinfo($file, \PATHINFO_FILENAME);
+        foreach (glob($resourceDir.'/*.php') as $file) {
+            $class = 'App\\Api\\Resource\\'.pathinfo($file, \PATHINFO_FILENAME);
+
             if (!class_exists($class)) {
                 continue;
             }
@@ -89,34 +89,7 @@ final class ReverseClassObjectMapperMetadataFactoryPass implements CompilerPassI
                     if ($resourceType instanceof \ReflectionNamedType && 'array' === $resourceType->getName()) {
                         $propName = $entityProp->getName();
                         $collectionProperties[$entityClass][] = $propName;
-                        $skipProperties[$entityClass][] = $propName;
-                    }
-                }
-            }
-
-            // Find entity object properties that map to embedded DTOs
-            foreach ($entityRefl->getProperties() as $entityProp) {
-                $type = $entityProp->getType();
-                if (!$type instanceof \ReflectionNamedType) {
-                    continue;
-                }
-
-                $typeName = $type->getName();
-
-                // Skip collections (already handled) and non-classes
-                if (!class_exists($typeName) || is_a($typeName, Collection::class, true)) {
-                    continue;
-                }
-
-                // If this entity type is mapped to an Embedded class, skip it on reverse
-                if (isset($classMap[$typeName])) {
-                    $embeddedClass = $classMap[$typeName];
-                    // Only skip if target is an Embedded (not a Resource)
-                    if (str_starts_with($embeddedClass, 'App\\Api\\Embedded\\')) {
-                        $propName = $entityProp->getName();
-                        if ($refl->hasProperty($propName)) {
-                            $skipProperties[$entityClass][] = $propName;
-                        }
+                        $skipProperties[$class][] = $propName;
                     }
                 }
             }

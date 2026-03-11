@@ -52,8 +52,13 @@ Install dependencies :
 
     docker exec -it objectmapper_api bash
     composer install
+
+Create the database and populate it :
+
     bin/console doctrine:database:create
     bin/console doctrine:schema:create
+    bin/console doctrine:schema:update --force
+    bin/console foundry:load-fixtures app:seed --no-interaction
     exit
 
 
@@ -71,20 +76,12 @@ To populate the database with representative sample data (this will purge the da
 
 ## Tests
 
-Avant de lancer les tests la première fois, on créé la DB de test et on lance le populate :
+Populate the test database :
 
     docker exec -it objectmapper_api bin/console doctrine:database:create --env=test
     docker exec -it objectmapper_api bin/console doctrine:schema:create --env=test
     docker exec -it objectmapper_api bin/console foundry:load-fixtures app:seed --no-interaction --env=test
 
-### Unit tests
+Execute the tests :
 
-Exécution des tests unitaires :
-
-    docker exec -it objectmapper_api ./vendor/bin/phpunit -c phpunit.xml.dist tests/Unit
-
-### Functional tests
-
-Exécution des tests fonctionnels :
-
-    docker exec -it objectmapper_api ./vendor/bin/phpunit -c phpunit.xml.dist tests/Functional
+    docker exec -it objectmapper_api ./vendor/bin/phpunit -c phpunit.xml.dist

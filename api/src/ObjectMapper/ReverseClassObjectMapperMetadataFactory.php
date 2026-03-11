@@ -39,9 +39,7 @@ final class ReverseClassObjectMapperMetadataFactory implements ObjectMapperMetad
     public function create(object $object, ?string $property = null, array $context = []): array
     {
         $class = $object::class;
-
-        $isForward = isset($this->classMap[$class]);
-        $key = ($isForward ? 'fwd:' : 'rev:').$class.($property ? '.'.$property : '');
+        $key = $class.($property ? '.'.$property : '');
 
         if (isset($this->attributesCache[$key])) {
             return $this->attributesCache[$key];
@@ -77,18 +75,9 @@ final class ReverseClassObjectMapperMetadataFactory implements ObjectMapperMetad
 
             foreach ($attributes as $attribute) {
                 $map = $attribute->newInstance();
-                if (!$map->source) {
-                    continue;
+                if ($map->source) {
+                    $mappings[] = new Mapping($reflProperty->getName(), $map->source, $map->if, $map->transform);
                 }
-
-                // Extract root property from expressions like "contact?.email" or "contact.email"
-                $sourceRoot = explode('.', str_replace('?.', '.', $map->source))[0];
-
-                if ($sourceRoot !== $property) {
-                    continue;
-                }
-
-                $mappings[] = new Mapping($reflProperty->getName(), $map->source, $map->if, $map->transform);
             }
         }
 

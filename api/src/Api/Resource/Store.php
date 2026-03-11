@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace App\Api\Resource\Store;
+namespace App\Api\Resource;
 
 use ApiPlatform\Doctrine\Orm\Filter\BooleanFilter;
 use ApiPlatform\Doctrine\Orm\Filter\ExactFilter;
@@ -22,7 +22,6 @@ use App\Api\Embedded\Store\Category;
 use App\Api\Embedded\Store\Manager;
 use App\Api\Embedded\Store\Supplier;
 use App\Entity\Store as StoreEntity;
-use App\ObjectMapper\Transform\PhoneTransformer;
 use Symfony\Component\ObjectMapper\Attribute\Map;
 use Symfony\Component\Validator\Constraints as Assert;
 
@@ -77,7 +76,7 @@ class Store
     #[Map(source: 'contact?.email')]
     public ?string $email = null;
 
-    #[Map(source: 'contact?.phone', transform: PhoneTransformer::class)]
+    #[Map(source: 'contact?.phone')]
     public ?string $phone = null;
 
     public ?\DateTimeInterface $openingDate = null;

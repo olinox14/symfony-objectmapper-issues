@@ -10,7 +10,6 @@ use App\Factory\ManagerFactory;
 use App\Factory\StoreFactory;
 use App\Factory\SupplierFactory;
 use App\Factory\ToyFactory;
-use libphonenumber\PhoneNumberUtil;
 use Zenstruck\Foundry\Attribute\AsFixture;
 use Zenstruck\Foundry\Story;
 use function Zenstruck\Foundry\faker;
@@ -43,7 +42,7 @@ final class AppStory extends Story
             'contact' => ContactFactory::createOne([
                 'address' => '123 Rue de la Paix, Paris',
                 'email' => 'contact@store-full.fr',
-                'phone' => PhoneNumberUtil::getInstance()->parse('+33123456789'),
+                'phone' => '+33123456789',
             ]),
         ]);
         // Toys liés à ce store

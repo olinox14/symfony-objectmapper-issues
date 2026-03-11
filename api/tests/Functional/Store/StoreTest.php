@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace Functional\Store;
 
-use App\Api\Resource\Store\Store;
+use App\Api\Resource\Store;
 use App\Tests\Functional\Ap2iTestCase;
 
 class StoreTest extends Ap2iTestCase
@@ -83,18 +83,6 @@ class StoreTest extends Ap2iTestCase
         static::assertMatchesResourceItemJsonSchema(Store::class);
 
         $this->assertSame('contact@store-full.fr', $response['email']);
-    }
-
-    /**
-     * GET d'un item et vérification d'une propriété indirecte avec transformer
-     */
-    public function testGetStorePropWithTransformer(): void
-    {
-        $response = $this->get('/api/stores/1');
-
-        static::assertMatchesResourceItemJsonSchema(Store::class);
-
-        $this->assertSame('+33123456789', $response['phone']);
     }
 
     /**
@@ -193,22 +181,4 @@ class StoreTest extends Ap2iTestCase
 
         $this->assertSame(1, $newValue);
     }
-
-
-    # Vérifier qu'on ne peut pas maj les props d'un objet lié avec un PATCH sur props relationnelles 1-1
-    # Vérifier qu'on ne peut pas maj les props d'un objet lié avec un PATCH sur props relationnelles 1-n
-    # Vérifier qu'on ne peut pas maj les props d'un objet lié avec un PATCH sur props relationnelles n-n
-
-
-    # Vérifier un POST avec uniquement props scalaires
-    # Vérifier un POST avec props relationnelles 1-1
-    # Vérifier un POST avec props relationnelles 1-1
-    # Vérifier un POST avec props relationnelles 1-n
-    # Vérifier qu'on ne peut pas maj les props d'un objet lié avec un POST sur props relationnelles 1-1
-    # Vérifier qu'on ne peut pas maj les props d'un objet lié avec un POST sur props relationnelles 1-n
-    # Vérifier qu'on ne peut pas maj les props d'un objet lié avec un POST sur props relationnelles n-n
-    # Vérifier un DELETE sans relation à Manager ni Toys
-    # Vérifier un DELETE avec relation à Manager et Toys; vérifier la suppression en cascade
-    # Vérifier la mise à jour d'une prop "indirecte" (ex: 'contact.email'; ne doit pas fonctionner)
-    # Vérifier que les GET retournent bien tous des objets embedded, et pas des arrays d'IRI
 }

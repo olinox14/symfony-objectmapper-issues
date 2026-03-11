@@ -3,7 +3,6 @@
 namespace App\Factory;
 
 use App\Entity\Contact;
-use libphonenumber\PhoneNumberUtil;
 use Zenstruck\Foundry\Persistence\PersistentObjectFactory;
 
 /**
@@ -37,7 +36,7 @@ final class ContactFactory extends PersistentObjectFactory
         return [
             'address' => self::faker()->address(),
             'email' => self::faker()->email(),
-            'phone' => PhoneNumberUtil::getInstance()->parse(self::faker()->e164PhoneNumber()),
+            'phone' => self::faker()->e164PhoneNumber(),
         ];
     }
 
