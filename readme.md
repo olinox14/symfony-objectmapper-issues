@@ -4,14 +4,8 @@
 
 This is a minimal reproduction application designed to demonstrate and reproduce issues encountered with the Symfony **ObjectMapper** service.
 
-- **Backend:** Symfony 8.0 & API Platform 4.2
+- **Backend:** Symfony 8.1 & API Platform 4.3
 - **Infrastructure:** Fully dockerized environment with Caddy as a reverse proxy.
-
-### Symfony 8.1 Backport
-
-Although the project uses Symfony 8.0 (to maintain compatibility with API Platform 4), it includes custom classes 
-located in `api/src/ObjectMapper`. These classes are a temporary backport of features planned for **Symfony 8.1** 
-(specifically the `ReverseClassObjectMapperMetadataFactory`), simulating the behavior of the next major Symfony version's ObjectMapper.
 
 ## API Demo Logic
 
