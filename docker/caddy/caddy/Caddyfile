@@ -1,0 +1,14 @@
+{
+  debug
+}
+
+local.api.objectmapper.net {
+  tls internal
+  reverse_proxy http://objectmapper_api:80
+  log {
+    output file /var/log/api-access.log {
+      roll_size 10mb
+      roll_keep 2
+    }
+  }
+}

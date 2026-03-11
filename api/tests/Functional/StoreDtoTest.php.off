@@ -1,0 +1,334 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Tests\Functional;
+
+use ApiPlatform\Symfony\Bundle\Test\ApiTestCase;
+use App\Entity\Category;
+use App\Entity\Store;
+use App\Entity\Toy;
+use App\Factory\BadgeFactory;
+use App\Factory\CategoryFactory;
+use App\Factory\ManagerFactory;
+use App\Factory\StoreFactory;
+use App\Factory\Story\AppStory;
+use App\Factory\ToyFactory;
+use Doctrine\ORM\EntityManagerInterface;
+use Zenstruck\Foundry\Test\Factories;
+use Zenstruck\Foundry\Test\ResetDatabase;
+
+final class StoreDtoTest extends ApiTestCase
+{
+    use Factories;
+    use ResetDatabase;
+
+    private EntityManagerInterface $em;
+
+    protected function setUp(): void
+    {
+        self::bootKernel();
+        $this->em = static::getContainer()->get(EntityManagerInterface::class);
+    }
+
+    public function testGetCollection(): void
+    {
+        AppStory::load();
+        $client = static::createClient();
+        $response = $client->request('GET', '/api/stores', [
+            'headers' => ['accept' => 'application/json'],
+        ]);
+
+        self::assertResponseIsSuccessful();
+        $data = $response->toArray();
+        self::assertIsArray($data);
+        self::assertCount(5, $data);
+
+        $item = $data[0];
+        self::assertSame('Store Full', $item['title']);
+        self::assertArrayHasKey('manager', $item);
+        self::assertSame('Manager Full', $item['manager']['name']);
+        self::assertCount(2, $item['toys']);
+        self::assertCount(3, $item['categories']);
+    }
+
+    public function testGetItem(): void
+    {
+        AppStory::load();
+        $store = $this->em->getRepository(Store::class)->findOneBy(['title' => 'Store Full']);
+
+        $client = static::createClient();
+        $response = $client->request('GET', '/api/stores/'.$store->getId(), [
+            'headers' => ['accept' => 'application/json'],
+        ]);
+
+        self::assertResponseIsSuccessful();
+        $item = $response->toArray();
+        self::assertSame('Store Full', $item['title']);
+        self::assertSame('12345678901234', $item['siret']);
+        self::assertSame(100, $item['surface']);
+        self::assertTrue($item['published']);
+        self::assertSame('+33123456789', $item['phone']);
+    }
+
+    public function testPostCreatesEmbeddedWhenNoIdAndUpdatesWhenIdPresent(): void
+    {
+        AppStory::load();
+        // Utilise une catégorie existante de la story
+        $existingCategory = $this->em->getRepository(Category::class)->findAll()[0];
+
+        $client = static::createClient();
+        $payload = [
+            'title' => 'S2',
+            'siret' => '98765432109876',
+            'surface' => 5,
+            'published' => false,
+            'manager' => [
+                'name' => 'Bob',
+                'badge' => [
+                    'label' => 'New',
+                    'isActive' => true,
+                ],
+            ],
+            'toys' => [
+                ['description' => 'Yo-yo', 'price' => 1],
+            ],
+            'categories' => [
+                ['id' => $existingCategory->getId(), 'tag' => 'C-NEW'],
+                ['tag' => 'D'],
+            ],
+        ];
+
+        $response = $client->request('POST', '/api/stores', [
+            'json' => $payload,
+            'headers' => ['accept' => 'application/json'],
+        ]);
+
+        self::assertResponseStatusCodeSame(201);
+        $data = $response->toArray();
+        self::assertSame('S2', $data['title']);
+        self::assertSame('98765432109876', $data['siret']);
+        self::assertCount(1, $data['toys']);
+        self::assertCount(2, $data['categories']);
+
+        $reloadedCat = $this->em->getRepository(Category::class)->find($existingCategory->getId());
+        self::assertSame('C-NEW', $reloadedCat->getTag());
+    }
+
+    public function testPutReplacesAndHandlesEmbeddedCreateOrUpdate(): void
+    {
+        AppStory::load();
+        $store = $this->em->getRepository(Store::class)->findOneBy(['title' => 'Store Full']);
+        $existingToy = $store->getToys()->first();
+        $existingToyId = $existingToy?->getId();
+
+        $client = static::createClient();
+        $payload = [
+            'title' => 'S1-updated',
+            'surface' => 42,
+            'published' => false,
+            'manager' => [
+                'id' => $store->getManager()?->getId(),
+                'name' => 'Alice-upd',
+            ],
+            'toys' => [
+                ['id' => $existingToyId, 'description' => 'Red car ++', 'price' => 10],
+                ['description' => 'New ship', 'price' => 3],
+            ],
+            'categories' => [],
+        ];
+
+        $response = $client->request('PUT', '/api/stores/'.$store->getId(), [
+            'json' => $payload,
+            'headers' => ['accept' => 'application/json'],
+        ]);
+
+        self::assertResponseIsSuccessful();
+        $data = $response->toArray();
+        self::assertSame('S1-updated', $data['title']);
+        self::assertCount(2, $data['toys']);
+
+        $updatedToy = $this->em->getRepository(Toy::class)->find($existingToyId);
+        self::assertSame('Red car ++', $updatedToy->getDescription());
+    }
+
+    public function testPatchUpdatesPartial(): void
+    {
+        AppStory::load();
+        $store = $this->em->getRepository(Store::class)->findOneBy(['title' => 'Store Full']);
+        $client = static::createClient();
+
+        $response = $client->request('PATCH', '/api/stores/'.$store->getId(), [
+            'json' => ['title' => 'Partial'],
+            'headers' => [
+                'accept' => 'application/json',
+                'content-type' => 'application/merge-patch+json',
+            ],
+        ]);
+
+        self::assertResponseIsSuccessful();
+        $data = $response->toArray();
+        self::assertSame('Partial', $data['title']);
+    }
+
+    public function testPatchBadgeColor(): void
+    {
+        AppStory::load();
+        $store = $this->em->getRepository(Store::class)->findOneBy(['title' => 'Store Full']);
+        $badgeId = $store->getManager()->getBadge()->getId();
+        $client = static::createClient();
+
+        $response = $client->request('PATCH', '/api/stores/'.$store->getId(), [
+            'json' => [
+                'manager' => [
+                    'badge' => [
+                        'color' => 'VIOLET'
+                    ]
+                ]
+            ],
+            'headers' => [
+                'accept' => 'application/json',
+                'content-type' => 'application/merge-patch+json',
+            ],
+        ]);
+
+        self::assertResponseIsSuccessful();
+        $data = $response->toArray();
+        self::assertSame('VIOLET', $data['manager']['badge']['color']);
+    }
+
+    public function testDeleteRemovesStore(): void
+    {
+        AppStory::load();
+        $store = $this->em->getRepository(Store::class)->findOneBy(['title' => 'Store Full']);
+        $id = $store->getId();
+        $client = static::createClient();
+
+        $client->request('DELETE', '/api/stores/'.$id);
+        self::assertResponseStatusCodeSame(204);
+
+        self::assertNull($this->em->getRepository(Store::class)->find($id));
+    }
+
+    public function testGetItemNotFound(): void
+    {
+        $this->expectOutputRegex('/\[error\] Uncaught PHP Exception Symfony\\\\Component\\\\HttpKernel\\\\Exception\\\\NotFoundHttpException/');
+        $client = static::createClient();
+        $client->request('GET', '/api/stores/9999');
+        self::assertResponseStatusCodeSame(404);
+    }
+
+    public function testPutOrphanRemoval(): void
+    {
+        AppStory::load();
+        $store = $this->em->getRepository(Store::class)->findOneBy(['title' => 'Store Full']);
+        $this->assertCount(2, $store->getToys());
+
+        $client = static::createClient();
+        $payload = [
+            'title' => 'S1-updated',
+            'toys' => [], // On vide les toys
+        ];
+
+        $client->request('PUT', '/api/stores/'.$store->getId(), [
+            'json' => $payload,
+            'headers' => ['accept' => 'application/json'],
+        ]);
+
+        self::assertResponseIsSuccessful();
+
+        // On vérifie que les toys ont été supprimés de la base (orphan removal via cascade persist/remove ou logique métier)
+        // Note: Dans Store.php, toys est en cascade persist, remove.
+        $this->em->clear();
+        $reloadedStore = $this->em->getRepository(Store::class)->find($store->getId());
+        $this->assertCount(0, $reloadedStore->getToys());
+    }
+
+    public function testInvalidDataTypeForSurface(): void
+    {
+        $this->expectOutputRegex('/\[critical\] Uncaught PHP Exception Symfony\\\\Component\\\\Serializer\\\\Exception\\\\NotNormalizableValueException/');
+        $client = static::createClient();
+        $client->request('POST', '/api/stores', [
+            'json' => [
+                'title' => 'Invalid Type Store',
+                'surface' => 'not-an-int',
+            ],
+            'headers' => ['accept' => 'application/json'],
+        ]);
+
+        // API Platform/Symfony Serializer devrait retourner une 400 ou une erreur de déserialization
+        // ou alors le validator intercepte si c'est mappé en string temporairement mais ici le DTO attend un int.
+        self::assertResponseStatusCodeSame(400);
+    }
+
+    public function testUpdateManagerReplacement(): void
+    {
+        AppStory::load();
+        $store = $this->em->getRepository(Store::class)->findOneBy(['title' => 'Store Empty']);
+        $this->assertNull($store->getManager());
+
+        // Créer un nouveau manager
+        $newManager = ManagerFactory::createOne(['name' => 'New Manager']);
+
+        $client = static::createClient();
+        $payload = [
+            'manager' => [
+                'id' => $newManager->getId(),
+                'name' => 'New Manager Updated'
+            ]
+        ];
+
+        $client->request('PATCH', '/api/stores/'.$store->getId(), [
+            'json' => $payload,
+            'headers' => [
+                'accept' => 'application/json',
+                'content-type' => 'application/merge-patch+json',
+            ],
+        ]);
+
+        self::assertResponseIsSuccessful();
+        $this->em->clear();
+        $reloadedStore = $this->em->getRepository(Store::class)->find($store->getId());
+
+        $this->assertSame($newManager->getId(), $reloadedStore->getManager()->getId());
+        $this->assertSame('New Manager Updated', $reloadedStore->getManager()->getName());
+    }
+
+    public function testValidationErrors(): void
+    {
+        $this->expectOutputRegex('/\[error\] Uncaught PHP Exception ApiPlatform\\\\Validator\\\\Exception\\\\ValidationException/');
+        $client = static::createClient();
+
+        // 1. Title vide, surface négative et SIRET invalide
+        $client->request('POST', '/api/stores', [
+            'json' => [
+                'title' => '',
+                'siret' => '123', // Trop court
+                'surface' => -1,
+                'email' => 'not-an-email',
+                'phone' => 'invalid-phone',
+                'toys' => [
+                    ['description' => '']
+                ]
+            ],
+            'headers' => ['accept' => 'application/ld+json'],
+        ]);
+
+        self::assertResponseStatusCodeSame(422);
+
+        $data = $client->getResponse()->toArray(false);
+        $violations = $data['violations'];
+
+        $indexedViolations = [];
+        foreach ($violations as $violation) {
+            $indexedViolations[$violation['propertyPath']] = $violation['message'];
+        }
+
+        self::assertArrayHasKey('title', $indexedViolations);
+        self::assertArrayHasKey('siret', $indexedViolations);
+        self::assertArrayHasKey('surface', $indexedViolations);
+        self::assertArrayHasKey('email', $indexedViolations);
+        self::assertArrayHasKey('phone', $indexedViolations);
+        self::assertArrayHasKey('toys[0].description', $indexedViolations);
+    }
+}

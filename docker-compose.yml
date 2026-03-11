@@ -1,0 +1,61 @@
+version: '3.3'
+
+services:
+  objectmapper_caddy:
+    hostname: objectmapper_caddy
+    container_name: objectmapper_caddy
+    restart: unless-stopped
+    build:
+      context: .
+      dockerfile: docker/caddy/Dockerfile
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - caddy_data:/data
+      - caddy_config:/config
+      - ./docker/caddy/caddy:/etc/caddy:cached
+
+  objectmapper_db:
+    hostname: objectmapper_db
+    container_name: objectmapper_db
+    build:
+      context: .
+      dockerfile: docker/db/Dockerfile
+    restart: always
+    ports:
+      - "3306:3306"
+    environment:
+      - MARIADB_DATABASE=${MARIADB_DATABASE}
+      - MARIADB_USER=${MARIADB_USER}
+      - MARIADB_PASSWORD=${MARIADB_PASSWORD}
+      - MARIADB_ROOT_PASSWORD=${MARIADB_ROOT_PASSWORD}
+    volumes:
+      - db_data:/var/lib/mysql:rw
+
+  objectmapper_api:
+    hostname: objectmapper_api
+    container_name: objectmapper_api
+    build:
+      context: .
+      dockerfile: docker/api/Dockerfile
+      args:
+        - OS=${OS}
+    restart: always
+    environment:
+      - PHP_IDE_CONFIG=serverName=api
+      - HTTPS_METHOD=noredirect
+    volumes:
+      - ./api:/var/www/html:cached
+      - ./api/vendor:/var/www/html/vendor:delegated
+      - appdata5:/var/www/html/var/cache/
+      - appdata5:/var/www/html/var/logs/
+    depends_on:
+      - objectmapper_db
+
+volumes:
+  db_data: ~
+  appdata5: ~
+  caddy_data: ~
+  caddy_config: ~
+

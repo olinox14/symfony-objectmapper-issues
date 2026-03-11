@@ -1,0 +1,31 @@
+api_platform:
+    enable_docs: true
+    enable_swagger: true
+    enable_swagger_ui: true
+    mapping:
+        paths:
+            - '%kernel.project_dir%/src/Api'
+    patch_formats:
+        json: ['application/merge-patch+json']
+    swagger:
+        versions: [3]
+    defaults:
+        pagination_enabled: true
+        pagination_items_per_page: 20
+        pagination_maximum_items_per_page: 50
+        pagination_client_enabled: true
+        pagination_client_items_per_page: true
+        normalization_context:
+            ## In 3.0, in conformance with the JSON Merge Patch RFC, the default value of the skip_null_values
+            ## property is true which means that from now on null values are omitted during serialization.
+            ## we don't want this => surcharge default value to false
+            skip_null_values: false
+            gen_id: false
+    formats:
+        jsonld: [ 'application/ld+json' ]
+        json: [ 'application/json' ]
+    graphql:
+        graphiql:
+            enabled: false
+    use_symfony_listeners: true
+

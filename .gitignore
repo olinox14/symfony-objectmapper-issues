@@ -1,0 +1,9 @@
+.idea/*
+/.env
+/helm/api-platform/charts/*
+!/helm/api-platform/charts/.gitignore
+/.project
+
+app/.yarn/install-state.gz
+
+api/config/reference.php
