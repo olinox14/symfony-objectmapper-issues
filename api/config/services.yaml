@@ -17,10 +17,3 @@ services:
     # as a service by FrameworkBundle, so autoconfiguration never tags it.
     Symfony\Component\ObjectMapper\Transform\MapCollection:
         autoconfigure: true
-
-    # Temporary backport of ReverseClassObjectMapperMetadataFactory from Symfony 8.1
-    # Allows ObjectMapper to recursively map entity relations to embedded DTOs
-    App\ObjectMapper\ReverseClassObjectMapperMetadataFactory:
-        decorates: 'object_mapper.metadata_factory'
-        arguments:
-            $objectMapperMetadataFactory: '@.inner'
