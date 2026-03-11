@@ -2,15 +2,19 @@
 
 namespace App\Entity;
 
-use ApiPlatform\Metadata\ApiResource;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity]
-class Store extends Company
+class Store
 {
+    #[ORM\Id]
+    #[ORM\GeneratedValue]
+    #[ORM\Column]
+    protected int $id;
+
     #[ORM\Column(length: 255)]
     protected string $title;
 
@@ -50,6 +54,11 @@ class Store extends Company
         $this->categories = new ArrayCollection();
         $this->suppliers = new ArrayCollection();
         $this->openingDate = new \DateTime();
+    }
+
+    public function getId(): ?int
+    {
+        return $this->id;
     }
 
     public function getTitle(): string
