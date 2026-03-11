@@ -71,6 +71,7 @@ class Store
 
     public ?int $surface = null;
 
+//    #[Map(source: 'published')]
     public ?bool $published = null;
 
 //    #[Map(source: 'contact?.email')]
