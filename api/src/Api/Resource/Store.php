@@ -23,6 +23,7 @@ use App\Api\Embedded\Store\Manager;
 use App\Api\Embedded\Store\Supplier;
 use App\Entity\Store as StoreEntity;
 use Symfony\Component\ObjectMapper\Attribute\Map;
+use Symfony\Component\ObjectMapper\Transform\MapCollection;
 use Symfony\Component\Validator\Constraints as Assert;
 
 #[ApiResource(
@@ -73,20 +74,21 @@ class Store
 
     public ?bool $published = null;
 
-//    #[Map(source: 'contact?.email')]
-//    public ?string $email = null;
+    #[Map(source: 'contact?.email')]
+    public ?string $email = null;
 
 //    #[Map(source: 'contact?.phone')]
 //    public ?string $phone = null;
 
     public ?\DateTimeInterface $openingDate = null;
 
-//    #[ApiProperty(genId: false)]
-//    public ?Manager $manager = null;
+    #[ApiProperty(genId: false)]
+    public ?Manager $manager = null;
 
-//    /** @var Toy[] */
-//    #[ApiProperty(readableLink: true, genId: false)]
-//    public array $toys = [];
+    /** @var Toy[] */
+    #[Map(transform: new MapCollection())]
+    #[ApiProperty(genId: false)]
+    public array $toys = [];
 
 //    /** @var Category[] */
 //    #[ApiProperty(genId: false)]
