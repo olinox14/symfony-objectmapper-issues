@@ -7,27 +7,20 @@ namespace App\Api\Resource;
 use ApiPlatform\Doctrine\Orm\State\Options;
 use ApiPlatform\Metadata\ApiProperty;
 use ApiPlatform\Metadata\ApiResource;
-use ApiPlatform\Metadata\Get;
-use ApiPlatform\Metadata\GetCollection;
 use App\Entity\Manager as ManagerEntity;
 use Symfony\Component\ObjectMapper\Attribute\Map;
 
 #[ApiResource(
     shortName: 'Manager',
-    stateOptions: new Options(entityClass: ManagerEntity::class),
-)]
-#[Get]
-#[GetCollection(
-    uriTemplate: '/managers',
-    normalizationContext: [
-        'attributes' => ['id', 'name'],
-    ],
+    stateOptions: new Options(entityClass: ManagerEntity::class)
 )]
 #[Map(source: ManagerEntity::class)]
-class Manager
+final class Manager
 {
     #[ApiProperty(identifier: true)]
     public int $id;
 
     public string $name;
+
+    public ?int $seniority = null;
 }

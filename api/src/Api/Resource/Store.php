@@ -16,6 +16,7 @@ use App\Api\Embedded\Store\Category;
 use App\Api\Embedded\Store\Manager;
 use App\Entity\Store as StoreEntity;
 use Symfony\Component\ObjectMapper\Attribute\Map;
+use Symfony\Component\ObjectMapper\Transform\MapCollection;
 
 #[ApiResource(
     shortName: 'Store',
@@ -44,14 +45,16 @@ use Symfony\Component\ObjectMapper\Attribute\Map;
 class Store
 {
     #[ApiProperty(identifier: true)]
+    #[Map(source: 'id')]
     public int $id;
 
+//    #[Map(source: 'title')]
     public string $title;
 
-    #[ApiProperty(genId: false)]
+    #[Map(source: 'manager')]
     public ?Manager $manager = null;
 
     /** @var Category[] */
-    #[ApiProperty(genId: false)]
+    #[Map(source: 'categories', transform: MapCollection::class)]
     public array $categories = [];
 }
