@@ -3,9 +3,6 @@ declare(strict_types=1);
 
 namespace App\Api\Resource;
 
-use ApiPlatform\Doctrine\Orm\Filter\BooleanFilter;
-use ApiPlatform\Doctrine\Orm\Filter\ExactFilter;
-use ApiPlatform\Doctrine\Orm\Filter\PartialSearchFilter;
 use ApiPlatform\Doctrine\Orm\State\Options;
 use ApiPlatform\Metadata\ApiProperty;
 use ApiPlatform\Metadata\ApiResource;
@@ -14,47 +11,30 @@ use ApiPlatform\Metadata\Get;
 use ApiPlatform\Metadata\GetCollection;
 use ApiPlatform\Metadata\Patch;
 use ApiPlatform\Metadata\Post;
-use ApiPlatform\Metadata\QueryParameter;
-use App\Api\Dto\Store\CreateStore;
 use App\Api\Dto\Store\StoreCollectionItem;
-use App\Api\Dto\Store\UpdateStore;
 use App\Api\Embedded\Store\Category;
 use App\Api\Embedded\Store\Manager;
-use App\Api\Embedded\Store\Supplier;
 use App\Entity\Store as StoreEntity;
 use Symfony\Component\ObjectMapper\Attribute\Map;
-use Symfony\Component\ObjectMapper\Transform\MapCollection;
-use Symfony\Component\Validator\Constraints as Assert;
 
 #[ApiResource(
     shortName: 'Store',
     stateOptions: new Options(entityClass: StoreEntity::class)
 )]
-#[Get]
 #[Get(
     uriTemplate: '/stores/{id}',
     uriVariables: ['id']
 )]
 #[GetCollection(
     uriTemplate: '/stores',
-    output: StoreCollectionItem::class,
-    parameters: [
-        'title' => new QueryParameter(filter: new PartialSearchFilter()),
-        'published' => new QueryParameter(filter: new BooleanFilter()),
-        'siret' => new QueryParameter(
-            filter: new ExactFilter(),
-            constraints: [new Assert\Length(exactly: 14)],
-        ),
-    ],
+    output: StoreCollectionItem::class
 )]
 #[Post(
-    uriTemplate: '/stores',
-    input: CreateStore::class
+    uriTemplate: '/stores'
 )]
 #[Patch(
     uriTemplate: '/stores/{id}',
-    uriVariables: ['id'],
-    input: UpdateStore::class
+    uriVariables: ['id']
 )]
 #[Delete(
     uriTemplate: '/stores/{id}',
@@ -68,33 +48,10 @@ class Store
 
     public string $title;
 
-    public ?string $siret = null;
+    #[ApiProperty(genId: false)]
+    public ?Manager $manager = null;
 
-    public ?int $surface = null;
-
-    public ?bool $published = null;
-
-//    #[Map(source: 'contact?.email')]
-//    public ?string $email = null;
-
-//    #[Map(source: 'contact?.phone')]
-//    public ?string $phone = null;
-
-    public ?\DateTimeInterface $openingDate = null;
-
-//    #[ApiProperty(genId: false)]
-//    public ?Manager $manager = null;
-
-//    /** @var Toy[] */
-//    #[Map(transform: new MapCollection())]
-//    #[ApiProperty(genId: false)]
-//    public array $toys = [];
-
-//    /** @var Category[] */
-//    #[ApiProperty(genId: false)]
-//    public array $categories = [];
-
-//    /** @var Supplier[] */
-//    #[ApiProperty(genId: false)]
-//    public array $suppliers = [];
+    /** @var Category[] */
+    #[ApiProperty(genId: false)]
+    public array $categories = [];
 }

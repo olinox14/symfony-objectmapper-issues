@@ -7,22 +7,18 @@ namespace App\Api\Resource;
 use ApiPlatform\Doctrine\Orm\State\Options;
 use ApiPlatform\Metadata\ApiProperty;
 use ApiPlatform\Metadata\ApiResource;
-use ApiPlatform\Metadata\Get;
-use App\Entity\Toy as ToyEntity;
+use App\Entity\Category as CategoryEntity;
 use Symfony\Component\ObjectMapper\Attribute\Map;
 
 #[ApiResource(
-    shortName: 'Toy',
-    stateOptions: new Options(entityClass: ToyEntity::class)
+    shortName: 'Category',
+    stateOptions: new Options(entityClass: CategoryEntity::class)
 )]
-#[Get]
-#[Map(source: ToyEntity::class)]
-final class Toy
+#[Map(source: CategoryEntity::class)]
+final class Category
 {
     #[ApiProperty(identifier: true)]
     public int $id;
 
-    public string $description;
-
-    protected ?float $price = null;
+    public string $tag;
 }
