@@ -10,5 +10,10 @@ use Symfony\Component\HttpKernel\Kernel as BaseKernel;
 class Kernel extends BaseKernel
 {
     use MicroKernelTrait;
+
+    protected function build(ContainerBuilder $container): void
+    {
+        $container->addCompilerPass(new ReverseClassObjectMapperMetadataFactoryPass());
+    }
 }
 

@@ -25,20 +25,19 @@ final class ReverseClassObjectMapperMetadataFactory implements ObjectMapperMetad
 
     /**
      * @param array<class-string, class-string>      $classMap              Entity → Embedded sub-object class
-     * @param array<class-string, list<string>>       $collectionProperties  Entity class → property names needing MapCollection (forward)
-     * @param array<class-string, list<string>>       $skipProperties        Resource class → property names to skip (reverse)
      */
     public function __construct(
         private readonly ObjectMapperMetadataFactoryInterface $objectMapperMetadataFactory,
         private readonly array $classMap = [],
-        private readonly array $collectionProperties = [],
-        private readonly array $skipProperties = [],
+        private readonly array $inversedClassMap = [],
     ) {
     }
 
     public function create(object $object, ?string $property = null, array $context = []): array
     {
         $class = $object::class;
+
+        // Important to keep the key format consistent with api/vendor/symfony/object-mapper/Metadata/ReverseClassObjectMapperMetadataFactory.php
         $key = $class.($property ? '.'.$property : '');
 
         if (isset($this->attributesCache[$key])) {
@@ -75,18 +74,21 @@ final class ReverseClassObjectMapperMetadataFactory implements ObjectMapperMetad
 
             foreach ($attributes as $attribute) {
                 $map = $attribute->newInstance();
-                if (!$map->source) {
-                    continue;
-                }
+
+                $source = $map->source ?? $reflProperty->getName();
 
                 // Extract root property from expressions like "contact?.email" or "contact.email"
-                $sourceRoot = explode('.', str_replace('?.', '.', $map->source))[0];
+                $sourceRoot = explode('.', str_replace('?.', '.', $source))[0];
 
                 if ($sourceRoot !== $property) {
                     continue;
                 }
 
-                $mappings[] = new Mapping($reflProperty->getName(), $map->source, $map->if, $map->transform);
+                $mappings[] = new Mapping($reflProperty->getName(), $source, $map->if, $map->transform);
+            }
+
+            if (!$attributes && $reflProperty->getName() === $property) {
+                $mappings[] = new Mapping($reflProperty->getName());
             }
         }
 

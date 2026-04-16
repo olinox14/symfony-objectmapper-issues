@@ -45,16 +45,14 @@ use Symfony\Component\ObjectMapper\Transform\MapCollection;
 class Store
 {
     #[ApiProperty(identifier: true)]
-    #[Map(source: 'id')]
     public int $id;
 
-//    #[Map(source: 'title')]
     public string $title;
 
-    #[Map(source: 'manager')]
-    public ?Manager $manager = null;
+//    #[Map(source: 'manager')]
+//    public ?Manager $manager = null;
 
-    /** @var Category[] */
-    #[Map(source: 'categories', transform: MapCollection::class)]
-    public array $categories = [];
+//    /** @var Category[] */
+//    #[Map(source: 'categories', transform: MapCollection::class)]
+//    public array $categories = [];
 }
