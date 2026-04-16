@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace App\ObjectMapper;
 
+use App\ObjectMapper\Attribute\MapTo;
+use App\ObjectMapper\Transform\MapToTransformer;
 use Symfony\Component\ObjectMapper\Attribute\Map;
 use Symfony\Component\ObjectMapper\Metadata\Mapping;
 use Symfony\Component\ObjectMapper\Metadata\ObjectMapperMetadataFactoryInterface;
-use Symfony\Component\ObjectMapper\Transform\MapCollection;
+use Symfony\Component\ObjectMapper\ObjectMapperInterface;
 
 /**
  * Maps classes based on attributes found on the target's properties.
@@ -29,7 +31,6 @@ final class ReverseClassObjectMapperMetadataFactory implements ObjectMapperMetad
     public function __construct(
         private readonly ObjectMapperMetadataFactoryInterface $objectMapperMetadataFactory,
         private readonly array $classMap = [],
-        private readonly array $inversedClassMap = [],
     ) {
     }
 
@@ -45,18 +46,6 @@ final class ReverseClassObjectMapperMetadataFactory implements ObjectMapperMetad
         }
 
         $mappings = $this->objectMapperMetadataFactory->create($object, $property, $context);
-
-        // Forward: entity Collection → resource array via MapCollection
-        if ($property && isset($this->collectionProperties[$class]) && \in_array($property, $this->collectionProperties[$class], true)) {
-            $mappings[] = new Mapping(transform: MapCollection::class);
-
-            return $this->attributesCache[$key] = $mappings;
-        }
-
-        // Reverse: skip collection properties when mapping resource → entity
-        if ($property && isset($this->skipProperties[$class]) && \in_array($property, $this->skipProperties[$class], true)) {
-            return $this->attributesCache[$key] = [new Mapping(if: false)];
-        }
 
         if (!$targetClass = $this->classMap[$class] ?? null) {
             return $mappings;

@@ -13,8 +13,8 @@ use ApiPlatform\Metadata\Patch;
 use ApiPlatform\Metadata\Post;
 use App\Api\Dto\Store\StoreCollectionItem;
 use App\Api\Embedded\Store\Category;
-use App\Api\Embedded\Store\Manager;
 use App\Entity\Store as StoreEntity;
+use App\ObjectMapper\Transform\MapItem;
 use Symfony\Component\ObjectMapper\Attribute\Map;
 use Symfony\Component\ObjectMapper\Transform\MapCollection;
 
@@ -49,10 +49,11 @@ class Store
 
     public string $title;
 
-//    #[Map(source: 'manager')]
-//    public ?Manager $manager = null;
+    #[Map(transform: new MapItem(targetClass: Manager::class))]
+    #[ApiProperty(genId: true)]
+    public ?Manager $manager = null;
 
-//    /** @var Category[] */
-//    #[Map(source: 'categories', transform: MapCollection::class)]
-//    public array $categories = [];
+    /** @var Category[] */
+    #[Map(transform: new MapCollection(targetClass: Category::class))]
+    public array $categories = [];
 }
